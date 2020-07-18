@@ -1,4 +1,4 @@
-div.bbcs-tooltip {
+div.cts-tooltip {
   visibility: visible;
   width: auto;
   background-color: rgba(0, 0, 0, 0.6);
@@ -14,20 +14,20 @@ div.bbcs-tooltip {
   margin: 0px 0px;
 }
 
-div.bbcs-tooltip div.section {
+div.cts-tooltip div.section {
   display: flex;
   flex-direction: column;
   justify-content: left;
 }
 
-div.bbcs-tooltip div.value {
+div.cts-tooltip div.value {
   display: flex;
   flex-direction: row;
 	align-items: center;
   justify-content: left;
 }
 
-div.bbcs-tooltip div.value i {
+div.cts-tooltip div.value i {
   color: rgb(75, 130, 225);
 	width: 25px;
 	text-align: center;
@@ -35,6 +35,6 @@ div.bbcs-tooltip div.value i {
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
-div.bbcs-tooltip.visible {
+div.cts-tooltip.visible {
   visibility: visible;
 }

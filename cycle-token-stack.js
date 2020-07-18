@@ -21,7 +21,7 @@ function cts_GetStack(token)
 
 function cts_SetTooltip(canvasToken)
 {
-	$('.cts_-tooltip').remove();
+	$('.cts-tooltip').remove();
 	canvasToken = cts_GetStack(canvasToken);
 	if (!canvasToken) return;
 	cts_HoverToken = canvasToken;
@@ -37,7 +37,7 @@ function cts_SetTooltip(canvasToken)
 	});
 	fullTemplate +=	`</div>`;
 
-	let cts_tooltip = $(`<div class="cts_-tooltip"></div>`);
+	let cts_tooltip = $(`<div class="cts-tooltip"></div>`);
 	cts_tooltip.css('left', (canvasToken.worldTransform.tx + 0) + 'px');
 	cts_tooltip.css('top', (canvasToken.worldTransform.ty + (((canvasToken.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
 	cts_tooltip.html(fullTemplate);
@@ -80,7 +80,7 @@ function cts_MouseMove ()
 	cts_ReadyToCycle = false;
 	if (cts_HoverToken)
 		cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
-	$('.cts_-tooltip').remove();
+	$('.cts-tooltip').remove();
 }
 
 
@@ -100,7 +100,7 @@ function cts_TokenOnMouseDown() {
 					cts_RefreshStack(cts_HoverToken);
 				else
 					cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
-			}, timeout);
+			}, timeOut);
 		}
 	}
 }
@@ -119,11 +119,11 @@ Hooks.on("hoverToken", (token, hovered) => {
 	else if (hovered && !cts_Controlling)
 		cts_SetTooltip(token);
 	else
-		$('.cts_-tooltip').remove();
+		$('.cts-tooltip').remove();
 });
 
 
 Hooks.on("deleteToken", (scene, token) => {
 	cts_ReadyToCycle = false;
-	$('.cts_-tooltip').remove();
+	$('.cts-tooltip').remove();
 });
