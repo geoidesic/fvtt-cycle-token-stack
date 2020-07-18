@@ -2,7 +2,7 @@
 	"name": "cycle-token-stack",
 	"title": "Cycle Token Stack",
 	"description": "Cycles through a stack of tokens using repeated left-clicks.",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"author": "BeerBuddy#0901 (discord)",
 	"minimumCoreVersion": "0.6.5",
 	"compatibleCoreVersion": "0.6.5",
@@ -11,5 +11,5 @@
 	"styles": ["./styles.css"],
 	"url": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack",
 	"manifest": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/module.json",
-	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/releases/tag/v0.3.1/cycle-token-stack.zip"
+	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/releases/tag/v0.3.2/cycle-token-stack.zip"
 }
