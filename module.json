@@ -1,0 +1,15 @@
+{
+	"name": "cycle-token-stack",
+	"title": "Cycle Token Stack",
+	"description": "Cycles through a stack of tokens using repeated left-clicks.",
+	"version": "0.1.0",
+	"author": "BeerBuddy#0901 (discord)",
+	"minimumCoreVersion": "0.6.5",
+	"compatibleCoreVersion": "0.6.5",
+	"systems": ["dnd5e"],
+	"scripts": ["init.js", "./cycle-token-stack.js"],
+	"styles": ["./styles.css"],
+	"url": "tbd",
+	"manifest": "tbd",
+	"download": "tbd"
+}
