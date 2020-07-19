@@ -1,7 +1,7 @@
 Hooks.once("init", () => {
 	game.settings.register("cycle-token-stack", "showTokenList", {
 		name: "Display List of Tokens",
-		hint: "Determines whether or not to show list of tokens as a tool tip when hovering over stack.",
+		hint: "Determines whether or not to show GM a list of tokens as a tool tip when hovering over stack.",
 		scope: "world",
 		config: true,
 		default: "stacked",

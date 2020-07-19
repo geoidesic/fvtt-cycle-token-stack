@@ -4,36 +4,42 @@ let cts_TokenStack = [];
 let cts_Controlling = false;
 let cts_ReadyToCycle = false;
 let cts_IAmClicking = false;
+let cts_IAmTargeting = false;
+let cts_HasATooltip = false;
 
 function cts_GetStack(token)
 {
 	cts_TokenStack = [];
-	token = token || canvas.tokens.controlled[0];
 	if (token) {
-		token = canvas.tokens.placeables.find((t) => t.id === token.id);
 		canvas.tokens.placeables.forEach(t => { 
 			if (t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h)
-			cts_TokenStack.push(t);
+				cts_TokenStack.push(t);
 		});
 	}
 	return token;
 }
 
+function cts_RemoveTooltip()
+{
+	if (cts_HasATooltip)
+		$('.cts-tooltip').remove();
+	cts_HasATooltip = false;
+}
+
 function cts_SetTooltip(canvasToken)
 {
-	$('.cts-tooltip').remove();
-	canvasToken = cts_GetStack(canvasToken);
+	cts_RemoveTooltip();
 	if (!canvasToken) return;
-	cts_HoverToken = canvasToken;
 	let showTooltip = game.settings.get("cycle-token-stack", "showTokenList");
-	if (showTooltip == "hide" || (showTooltip == "always" && cts_TokenStack.length < 1) || (showTooltip == "stacked" && cts_TokenStack.length < 2))
+	if (!game.user.isGM || showTooltip == "hide" || (showTooltip == "always" && cts_TokenStack.length < 1) || (showTooltip == "stacked" && cts_TokenStack.length < 2))
 		return;
 	let fullTemplate = `<div class="section">`;
 	cts_TokenStack.forEach(tok => {
-		if (tok._controlled)
-			fullTemplate += `<div class="value"><i class="far fa-eye"></i>${tok.name}</div>`;
-		else
-			fullTemplate += `<div class="value"><i class="fas fa-search"></i>${tok.name}</div>`;
+			fullTemplate += `<div class="value">
+			<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
+			${tok.name}
+			${tok.isTargeted ? '<i class="far fa-eye"></i>' : ''}
+			</div>`;
 	});
 	fullTemplate +=	`</div>`;
 
@@ -42,6 +48,7 @@ function cts_SetTooltip(canvasToken)
 	cts_tooltip.css('top', (canvasToken.worldTransform.ty + (((canvasToken.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
 	cts_tooltip.html(fullTemplate);
 	$('body.game').append(cts_tooltip);
+	cts_HasATooltip = true;
 }
 
 
@@ -62,14 +69,14 @@ function cts_CycleSelected()
 
 function cts_RefreshStack(token)
 {
+	cts_IAmTargeting = (ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
 	if (cts_HoverToken)
 		cts_HoverToken.off('mousedown', cts_TokenOnMouseDown);
-	cts_SetTooltip(token);
-	if (cts_ReadyToCycle)
-	{
+	cts_HoverToken = cts_GetStack(token);
+	if (cts_ReadyToCycle && !cts_IAmTargeting)
 		cts_CycleSelected();
-		cts_SetTooltip(cts_HoverToken);
-	}
+	cts_HoverToken = cts_GetStack(cts_HoverToken);
+	cts_SetTooltip(cts_HoverToken);
 	if (cts_HoverToken)
 		cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
 }
@@ -80,15 +87,15 @@ function cts_MouseMove ()
 	cts_ReadyToCycle = false;
 	if (cts_HoverToken)
 		cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
-	$('.cts-tooltip').remove();
+	cts_RemoveTooltip();
 }
 
 
 function cts_TokenOnMouseDown() {
-	if (!this || !this.actor || !event || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || cts_IAmClicking)
+	if (!this || !event || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || cts_IAmClicking)
 		cts_ReadyToCycle = false;
 	else {
-		cts_ReadyToCycle = (cts_ReadyToCycle || (cts_HoverToken !== null && this.id === cts_HoverToken.id));
+		cts_ReadyToCycle = (cts_HoverToken && this.id === cts_HoverToken.id);
 		if (cts_ReadyToCycle) {
 			let timeOut = game.settings.get("cycle-token-stack", "minClickDelay");
 			this.once('mousemove', cts_MouseMove);
@@ -102,28 +109,43 @@ function cts_TokenOnMouseDown() {
 					cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
 			}, timeOut);
 		}
+		else
+		{
+			cts_HoverToken = this;
+			cts_SetTooltip(cts_GetStack(this));
+			cts_HoverToken.once('mousedown', cts_TokenOnMouseDown);
+		}
 	}
 }
 
 Hooks.on("controlToken", (token, controlled) => {
 	cts_ReadyToCycle = false;
-	if ((!token || cts_Controlling) && controlled)
-		cts_RefreshStack(token);
+	if (!cts_Controlling && token && controlled)
+	{
+		token.off('mousedown', cts_TokenOnMouseDown);
+		cts_SetTooltip(cts_GetStack(token));
+		token.once('mousedown', cts_TokenOnMouseDown);
+	}
 });
 
 
 Hooks.on("hoverToken", (token, hovered) => {
 	cts_ReadyToCycle = false;
-	if (token && hovered && !cts_Controlling && token._controlled)
-		cts_RefreshStack(token);
-	else if (hovered && !cts_Controlling)
-		cts_SetTooltip(token);
+	if (cts_Controlling) return;
+	if (token && hovered)
+	{
+		token.off('mousedown', cts_TokenOnMouseDown);
+		cts_HoverToken = (token._controlled ? token : cts_HoverToken);
+		cts_SetTooltip(cts_GetStack(token));
+		if (token)
+			token.once('mousedown', cts_TokenOnMouseDown);
+	}
 	else
-		$('.cts-tooltip').remove();
+		cts_RemoveTooltip();
 });
 
 
 Hooks.on("deleteToken", (scene, token) => {
 	cts_ReadyToCycle = false;
-	$('.cts-tooltip').remove();
+	cts_RemoveTooltip();
 });
