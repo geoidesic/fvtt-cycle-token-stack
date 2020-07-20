@@ -14,10 +14,8 @@ function cts_BuildStack(token)
 {
 	cts_TokenStack = [];
 	if (token) {
-		canvas.tokens.placeables.filter(i => game.user.isGM || i.nameplate.visible).forEach(t => { 
-			if (t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h)
-				cts_TokenStack.push(t);
-		});
+		cts_TokenStack = canvas.tokens.placeables.filter(t => (game.user.isGM || t.owner)
+			 && (t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h));
 	}
 	return token;
 }
