@@ -1,20 +1,20 @@
 Hooks.once("init", () => {
 	game.settings.register("cycle-token-stack", "showTokenList", {
-		name: "Display List of Tokens",
-		hint: "Determines whether or not to show a list of tokens as a tool tip when hovering over stack.",
+		name: game.i18n.localize('BBCTS.showTokenList.title'),
+		hint: game.i18n.localize('BBCTS.showTokenList.hint'),
 		scope: "world",
 		config: true,
 		default: "stacked",
 		type: String,
 		choices: {
-			"hide": "Always Hide",
-			"always": "Always Show on Hover",
-			"stacked": "Show When Stacked Two or More"
+			"hide": game.i18n.localize('BBCTS.showTokenList.hide'),
+			"always": game.i18n.localize('BBCTS.showTokenList.always'),
+			"stacked": game.i18n.localize('BBCTS.showTokenList.stacked')
 		}
 	});
 	game.settings.register("cycle-token-stack", "minClickDelay", {
-		name: "Click Threshold (milliseconds)",
-		hint: "Minimum duration (ms) between single clicks to trigger cycling; avoids conflict with double-click.",
+		name: game.i18n.localize('BBCTS.minClickDelay.title'),
+		hint: game.i18n.localize('BBCTS.minClickDelay.hint'),
 		scope: "world",
 		config: true,
 		default: 300,
