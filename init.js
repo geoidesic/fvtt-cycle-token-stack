@@ -15,9 +15,17 @@ Hooks.once("init", () => {
 	game.settings.register("cycle-token-stack", "minClickDelay", {
 		name: game.i18n.localize('BBCTS.minClickDelay.title'),
 		hint: game.i18n.localize('BBCTS.minClickDelay.hint'),
-		scope: "world",
+		scope: "client",
 		config: true,
 		default: 300,
 		type: Number
+	});
+	game.settings.register("cycle-token-stack", "keyCycleForward",  {
+		name: game.i18n.localize('BBCTS.keyCycleForward.title'),
+		hint: game.i18n.localize('BBCTS.keyCycleForward.hint'),
+		scope: "client",
+		config: true,
+		default: '[',
+		type: String
 	});
 });

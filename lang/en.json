@@ -1,9 +1,11 @@
 {
 	"BBCTS.showTokenList.title": "Display List of Tokens",
-	"BBCTS.showTokenList.hint": "Determines whether or not to show a list of token names as a tool tip when hovering over tokens. Players only have tokens listed that they own; GM has all in stack listed.",
+	"BBCTS.showTokenList.hint": "Determines whether or not to show a list of token names as a tool tip when hovering over tokens.",
 	"BBCTS.showTokenList.hide": "Always Hide",
 	"BBCTS.showTokenList.always": "Always Show on Hover",
 	"BBCTS.showTokenList.stacked": "Show When Stacked Two or More",
 	"BBCTS.minClickDelay.title": "Click Threshold (milliseconds)",
-	"BBCTS.minClickDelay.hint": "Minimum duration (ms) between single clicks to trigger cycling; avoids conflict with double-click. Alter if accessability increases double-click detection time."
+	"BBCTS.minClickDelay.hint": "Minimum duration (ms) between single clicks to trigger cycling; avoids conflict with double-click.",
+	"BBCTS.keyCycleForward.title": "Cycle Token Keyboard Shortcut",
+	"BBCTS.keyCycleForward.hint": "What key to press to cycle to the next token in the stack."
 }
