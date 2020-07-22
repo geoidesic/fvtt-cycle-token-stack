@@ -1,5 +1,7 @@
 /**
  * Cycle through a stack of tokens using the left-click or keyboard shortcut.
+ * 
+ * Copyright (c) 2020 by John Sandberg, rights granted under MIT License
  */
 
  class CycleTokenStack {
@@ -116,7 +118,7 @@
 			this.readyToCycle = (this.hoverToken && this.hoverToken._controlled  && !this.IAmClicking);
 			if (this.readyToCycle)
 				this.RefreshStack(this.hoverToken);
-			else if (!this.IAmTargeting)
+			else if (!this.IAmTargeting && this.hoverToken.owner)
 				this.hoverToken.control();
 		}
 	}
