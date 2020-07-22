@@ -1,15 +1,15 @@
 {
 	"name": "cycle-token-stack",
 	"title": "Cycle Token Stack",
-	"description": "Cycles through a stack of tokens using repeated left-clicks.",
-	"version": "0.3.4",
+	"description": "Cycles through a stack of tokens using repeated left-clicks or key.",
+	"version": "0.4.0",
 	"author": "BeerBuddy",
 	"languages": [ {
 		"lang": "en", 
 		"name": "English", 
 		"path": "./lang/en.json"
 	} ],
-	"minimumCoreVersion": "0.6.5",
+	"minimumCoreVersion": "0.6.3",
 	"compatibleCoreVersion": "0.6.5",
 	"scripts": ["./init.js", "./cycle-token-stack.js"],
 	"styles": ["./styles.css"],
