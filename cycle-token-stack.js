@@ -4,6 +4,9 @@
  * Copyright (c) 2020 by John Sandberg, rights granted as described in LICENSE file
  */
 
+/**
+  * Class for retaining current control and hover state and processing cycle requests.
+  */
  class CycleTokenStack {
 
 	constructor() {
@@ -14,6 +17,10 @@
 		this.readyToCycle = false;
 		this.IAmClicking = false;
 		this.IAmTargeting = false;
+
+		this.keyCycleForward = '[';
+		this.showTokenList = "stacksed";
+		this.minClickDelay = 300;
 	}
 
 
@@ -31,17 +38,17 @@
 
 	async RemoveTooltip()
 	{
-		await $('.cts-tooltip').remove();
+		$('.cts-tooltip').remove();
 		this.lastControlledToken = null;
 	}
 
 
 	async SetTooltip()
 	{
-		this.RemoveTooltip();
+		await this.RemoveTooltip();
 		let t = this.hoverToken;
 		if (!t) return;
-		let showTooltip = game.settings.get("cycle-token-stack", "showTokenList");
+		let showTooltip = this.showTokenList;
 		if (showTooltip == "hide" || (showTooltip == "always" && this.tokenStack.length < 1) || (showTooltip == "stacked" && this.tokenStack.length < 2))
 			return;
 		let fullTemplate = `<div class="section">`;
@@ -98,7 +105,6 @@
 
 	async DoDelayedAction(token)
 	{
-		let timeOut = game.settings.get("cycle-token-stack", "minClickDelay");
 		token.once('mousemove', this.OnMouseMove);
 		this.IAmClicking = true;
 		setTimeout( () => {
@@ -113,17 +119,18 @@
 				this.DownEvents();
 			}
 			this.readyToCycle = true;
-		}, timeOut);
+		}, this.minClickDelay);
 	}
 
 
 	async OnKeyDown(e)
 	{
-		if (this.hoverToken && e && e.key === game.settings.get("cycle-token-stack", "keyCycleForward"))
+		if (this.hoverToken && e && e.key === this.keyCycleForward)
 		{
 			this.readyToCycle = (this.hoverToken && this.hoverToken._controlled  && !this.IAmClicking);
-			console.log("KeyDown", this.readyToCycle, this, e);
-			if (this.readyToCycle)
+			if (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey))
+				this.DownEvents();
+			else if (this.readyToCycle)
 				this.RefreshStack(this.hoverToken);
 			else if (!this.IAmTargeting && this.hoverToken.owner)
 				this.hoverToken.control();
@@ -190,10 +197,15 @@ Hooks.on("hoverToken", (token, hovered) => {
 		});
 	}
 	else
+	{
 		c.RemoveTooltip();
+		c.hoverToken = null;
+	}
 });
 
 
 Hooks.on("deleteToken", (scene, token) => {
-	_CycleTokenStack.RemoveTooltip();
+	let c = _CycleTokenStack;
+	c.RemoveTooltip();
+	c.hoverToken = null;
 });
