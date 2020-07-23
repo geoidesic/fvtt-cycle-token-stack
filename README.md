@@ -27,8 +27,7 @@ The Cycle Token Stack module has three configuration settings that each player c
  - Define a keyboard shortcut that performs a cycle identical to left-click button.  The default is the '[' character (left square bracket).
  
  # Known Issues
- - Sometimes, a click is not registered. Clicking again will usually start the cycling again.
- - If the token is moved, the tooltip disappears. Moving the mouse off and back on the token after the drag operation will refresh the tooltip.
+ - The tooltip occationally disappears after cycling. Moving the mouse off and back on the token will refresh the tooltip.
  - If a large token has a number of smaller ones spread around under it, the selection process goes 1) large token, 2) small token, 3) large token again, 4) other small token, 5) larget token again, etc.
  
  If you find any other issues or have suggestions, feel free to add an Issue to this project on GitHub.  Be sure to be specific in how to recreate it so that I can resolve it.
