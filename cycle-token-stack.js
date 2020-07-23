@@ -1,45 +1,46 @@
 /**
  * Cycle through a stack of tokens using the left-click or keyboard shortcut.
  * 
- * Copyright (c) 2020 by John Sandberg, rights granted under MIT License
+ * Copyright (c) 2020 by John Sandberg, rights granted as described in LICENSE file
  */
 
  class CycleTokenStack {
 
-	static hoverToken = null;
-	static lastControlledToken = null;
-	static tokenStack = [];
-	static IAmControlling = false;
-	static readyToCycle = false;
-	static IAmClicking = false;
-	static IAmTargeting = false;
+	constructor() {
+		this.hoverToken = null;
+		this.lastControlledToken = null;
+		this.tokenStack = [];
+		this.IAmControlling = false;
+		this.readyToCycle = false;
+		this.IAmClicking = false;
+		this.IAmTargeting = false;
+	}
 
 
-	static async BuildStack(token)
+	async BuildStack(token)
 	{
+		this.hoverToken = token;
 		this.tokenStack = [];
 		if (token) {
-			this.tokenStack = canvas.tokens.placeables.filter(t => (game.user.isGM || t.owner)
-				&& (t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h));
+			this.tokenStack = canvas.tokens.placeables.filter(t => (game.user.isGM || t.owner) &&
+				(t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h));
 		}
-		return token;
+		return this.hoverToken;
 	}
 
 
-	static async RemoveTooltip()
+	async RemoveTooltip()
 	{
-		$('.cts-tooltip').remove();
-		this.readyToCycle = false;
+		await $('.cts-tooltip').remove();
 		this.lastControlledToken = null;
-		this.hoverToken = null;
 	}
 
 
-	static async SetTooltip(canvasToken)
+	async SetTooltip()
 	{
 		this.RemoveTooltip();
-		this.hoverToken = canvasToken;
-		if (!canvasToken) return;
+		let t = this.hoverToken;
+		if (!t) return;
 		let showTooltip = game.settings.get("cycle-token-stack", "showTokenList");
 		if (showTooltip == "hide" || (showTooltip == "always" && this.tokenStack.length < 1) || (showTooltip == "stacked" && this.tokenStack.length < 2))
 			return;
@@ -54,14 +55,14 @@
 		fullTemplate +=	`</div>`;
 
 		let tooltip = $(`<div class="cts-tooltip"></div>`);
-		tooltip.css('left', (canvasToken.worldTransform.tx + 0) + 'px');
-		tooltip.css('top', (canvasToken.worldTransform.ty + (((canvasToken.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
+		tooltip.css('left', (t.worldTransform.tx + 0) + 'px');
+		tooltip.css('top', (t.worldTransform.ty + (((t.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
 		tooltip.html(fullTemplate);
 		$('body.game').append(tooltip);
 	}
 
 
-	static async CycleSelected()
+	async CycleSelected()
 	{
 		if (this.hoverToken === null || this.tokenStack.length < 2) return;
 		let idx = 0;
@@ -71,31 +72,31 @@
 		this.IAmControlling = true;
 		this.hoverToken = this.tokenStack[idx];
 		await this.hoverToken.control({releaseOthers: true});
+		this.lastControlledToken = this.hoverToken;
 		this.IAmControlling = false;
 	}
 
-	static async DownEvents(token) 
+	async DownEvents() 
 	{
 		if (this.hoverToken)
 			this.hoverToken.off('mousedown', this.OnMouseDown);
-		this.hoverToken = token;
-		if (token)
-			token.once('mousedown', this.OnMouseDown);
+		if (this.hoverToken)
+			this.hoverToken.once('mousedown', this.OnMouseDown);
 	}
 
-	static async RefreshStack(token)
+	async RefreshStack(token)
 	{
 		this.IAmTargeting = (ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
-		this.hoverToken = await this.BuildStack(token);
-		if (this.readyToCycle && !this.IAmTargeting)
+		await this.BuildStack(token);
+		if (!this.IAmTargeting)
 			await this.CycleSelected();
 		await this.BuildStack(this.hoverToken);
-		this.SetTooltip(this.hoverToken);
-		this.DownEvents(this.hoverToken);
+		this.SetTooltip();
+		this.DownEvents();
 	}
 
 
-	static async DoDelayedAction(token)
+	async DoDelayedAction(token)
 	{
 		let timeOut = game.settings.get("cycle-token-stack", "minClickDelay");
 		token.once('mousemove', this.OnMouseMove);
@@ -103,19 +104,25 @@
 		setTimeout( () => {
 			token.off('mousemove', this.OnMouseMove);
 			this.IAmClicking = false;
-			if (this.readyToCycle)
+			if (this.readyToCycle) {
 				this.RefreshStack(this.hoverToken);
+			}
 			else
-				this.DownEvents(this.hoverToken);
+			{
+				this.RemoveTooltip();
+				this.DownEvents();
+			}
+			this.readyToCycle = true;
 		}, timeOut);
 	}
 
 
-	static async OnKeyDown(e)
+	async OnKeyDown(e)
 	{
 		if (this.hoverToken && e && e.key === game.settings.get("cycle-token-stack", "keyCycleForward"))
 		{
 			this.readyToCycle = (this.hoverToken && this.hoverToken._controlled  && !this.IAmClicking);
+			console.log("KeyDown", this.readyToCycle, this, e);
 			if (this.readyToCycle)
 				this.RefreshStack(this.hoverToken);
 			else if (!this.IAmTargeting && this.hoverToken.owner)
@@ -123,65 +130,70 @@
 		}
 	}
 
-	static async OnMouseMove () 
+	async OnMouseMove () 
 	{
-		CycleTokenStack.readyToCycle = false;
-		CycleTokenStack.DownEvents(CycleTokenStack.hoverToken);
-		CycleTokenStack.RemoveTooltip();
+		let c = _CycleTokenStack;
+		c.readyToCycle = false;
+		c.RemoveTooltip();
+		c.DownEvents();
 	}
 
 
-	static async OnMouseDown(e)
+	async OnMouseDown(e)
 	{
-		if (CycleTokenStack.IAmClicking)
-			CycleTokenStack.readyToCycle = false;
+		let c = _CycleTokenStack;
+		if (c.IAmClicking)
+			c.readyToCycle = false;
 		else if (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey)) {
-			CycleTokenStack.SetTooltip(BuildStack(CycleTokenStack.hoverToken));
-			CycleTokenStack.DownEvents(CycleTokenStack.hoverToken);
+			c.DownEvents();
 		} else {
-			CycleTokenStack.readyToCycle = (CycleTokenStack.readyToCycle 
-				|| (this && CycleTokenStack.hoverToken && this.id === CycleTokenStack.hoverToken.id));
-			CycleTokenStack.hoverToken = this;
-			CycleTokenStack.DoDelayedAction(this);
+			await c.BuildStack(this);
+			c.SetTooltip();
+			c.DoDelayedAction(c.hoverToken);
 		}
 	}
 
-};
+}
  
+let _CycleTokenStack = new CycleTokenStack();
+
 
 onkeydown = function (e) {
 	e = e || event;
-	CycleTokenStack.OnKeyDown(e);
-}
+	_CycleTokenStack.OnKeyDown(e);
+};
 
 
 Hooks.on("controlToken", (token, controlled) => {
-	if (CycleTokenStack.IAmControlling) return;
-	CycleTokenStack.readyToCycle = (controlled && (CycleTokenStack.lastControlledToken && CycleTokenStack.hoverToken
-		&& CycleTokenStack.lastControlledToken.id === CycleTokenStack.hoverToken.id));
-	CycleTokenStack.BuildStack(token).then(t => {
+	let c = _CycleTokenStack;
+	if (c.IAmControlling) return;
+	c.readyToCycle = (controlled && c.hoverToken && c.lastControlledToken && c.lastControlledToken.id === c.hoverToken.id);
+	c.BuildStack(token).then(t => {
 		if (controlled)
-			CycleTokenStack.SetTooltip(t);
-		CycleTokenStack.DownEvents(t);
-		CycleTokenStack.lastControlledToken = t;
+		{
+			c.SetTooltip();
+			c.lastControlledToken = t;
+		}
+		c.DownEvents();
 	});
 });
 
 
 Hooks.on("hoverToken", (token, hovered) => {
-	if (CycleTokenStack.IAmControlling) return;
+	let c = _CycleTokenStack;
+	if (c.IAmControlling) return;
 	if (hovered) {
-		CycleTokenStack.readyToCycle = (token && token._controlled);
-		CycleTokenStack.BuildStack(token).then(t => {
-			CycleTokenStack.SetTooltip(t);
-			CycleTokenStack.DownEvents(t);
+		c.readyToCycle = (token && token._controlled);
+		c.BuildStack(token).then(t => {
+			c.SetTooltip();
+			c.DownEvents();
 		});
 	}
 	else
-		CycleTokenStack.RemoveTooltip();
+		c.RemoveTooltip();
 });
 
 
 Hooks.on("deleteToken", (scene, token) => {
-	CycleTokenStack.RemoveTooltip();
+	_CycleTokenStack.RemoveTooltip();
 });
