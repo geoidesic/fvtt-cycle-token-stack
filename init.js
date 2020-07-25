@@ -7,6 +7,7 @@ function modifySettings()
 		_CycleTokenStack.minClickDelay = game.settings.get(CTS_MODULE_NAME, "minClickDelay");
 		_CycleTokenStack.showTokenList = game.settings.get(CTS_MODULE_NAME, "showTokenList");
 		_CycleTokenStack.keyCycleForward = game.settings.get(CTS_MODULE_NAME, "keyCycleForward");
+		_CycleTokenStack.keyCycleBackward = game.settings.get(CTS_MODULE_NAME, "keyCycleBackward");
 	}
 }
 
@@ -41,6 +42,15 @@ Hooks.once("init", () => {
 		scope: "client",
 		config: true,
 		default: '[',
+		onChange: modifySettings,
+		type: String
+	});
+	game.settings.register(CTS_MODULE_NAME, "keyCycleBackward",  {
+		name: game.i18n.localize('BBCTS.keyCycleBackward.title'),
+		hint: game.i18n.localize('BBCTS.keyCycleBackward.hint'),
+		scope: "client",
+		config: true,
+		default: ']',
 		onChange: modifySettings,
 		type: String
 	});
