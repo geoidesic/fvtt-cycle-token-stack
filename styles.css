@@ -1,7 +1,7 @@
 div.cts-tooltip {
   visibility: visible;
   width: auto;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   text-align: left;
   border-radius: 3px;
@@ -28,7 +28,14 @@ div.cts-tooltip div.value {
 }
 
 div.cts-tooltip div.value i {
-  color: rgb(75, 130, 225);
+  color: rgb(45, 72, 194);
+	width: 25px;
+	text-align: center;
+	padding-right: 5px;
+}
+
+div.cts-tooltip div.value j {
+  color: rgb(206, 96, 77);
 	width: 25px;
 	text-align: center;
 	padding-right: 5px;
