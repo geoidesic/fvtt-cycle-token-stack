@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.4.2] 2020-07-26
+### BUGFIXES
+- Tooltips were showing for all tokens after init of world.
+- Tooltip would stick around when character sheet opened.
+
 ## [0.4.1] 2020-07-25
 ### ADDED
 - Ability to push a token to behind other tokens in stack with keystroke.
