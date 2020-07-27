@@ -135,18 +135,17 @@
 	}
 
 	OnKeyDown(e) {
-		let c = _CycleTokenStack;
-		if (c.IsDeactivated(e)) return;
-		if (c.hovering && e.key === c.keyCycleForward) {
-			if (c.hovering._controlled)
-				c.RefreshStack(c.hovering);
+		if (this.IsDeactivated(e)) return;
+		if (this.hovering && e.key === this.keyCycleForward) {
+			if (this.hovering._controlled)
+				this.RefreshStack(this.hovering);
 			else {
-				c.hovering.control({releaseOthers: true});
-				c.SetTooltip(c.hovering);
+				this.hovering.control({releaseOthers: true});
+				this.SetTooltip(c.hovering);
 			}
 		}
-		else if (c.hovering && e.key === c.keyCycleBackward)
-			this.ReleaseHovered(c.hovering);
+		else if (this.hovering && e.key === this.keyCycleBackward)
+			this.ReleaseHovered(this.hovering);
 	}
 
 	OnMouseMove(e) {
@@ -154,30 +153,30 @@
 		_CycleTokenStack.RemoveTooltip();
 	}
 
-	WaitALittle(token) {
+	MouseDown(t, f) {
 		this.clicking = true;
-		token.once('mousemove', this.OnMouseMove);
+		this.cancelClick = false;
+		t.once('mousemove', this.OnMouseMove);
 		setTimeout( () => { 
-			token.off('mousemove', this.OnMouseMove);
-			this.SetTooltip(token);
+			t.off('mousemove', this.OnMouseMove);
+			if (!this.cancelClick) {
+				if (f) this.RefreshStack(t); else this.SetTooltip(t);
+			}
 			this.clicking = false;
+			this.cancelClick = false;
 		}, this.minClickDelay);
+	}
+	
+	WaitALittle(token) {
+		this.MouseDown(token, false);
 	}
 
 	OnMouseDown(e) {
-		let c = _CycleTokenStack;
-		let oe = e.data.originalEvent;
+		const c = _CycleTokenStack;
+		const oe = e.data.originalEvent;
 		if (c.IsDeactivated(oe) || oe.shiftKey) return;
 		if (c.clicking) { c.cancelClick = true; return; }
-		c.clicking = true;
-		c.cancelClick = false;
-		this.once('mousemove', c.OnMouseMove);
-		setTimeout( () => { 
-			this.off('mousemove', c.OnMouseMove);
-			if (!c.cancelClick)
-				c.RefreshStack(this);
-			c.clicking = false;
-		}, c.minClickDelay);
+		c.MouseDown(this, true);
 	}
 }
 
@@ -195,12 +194,11 @@ Hooks.on("controlToken", (token, controlled) => {
 	if (controlled) {
 		c.isTooltipOK = true;
 		token.on('mousedown', c.OnMouseDown);
-		if (!c.clicking) c.WaitALittle(token);
+		c.WaitALittle(token);
 	}
 	else
-	{
 		token.off('mousedown', c.OnMouseDown);
-	}
+
 	c.setTokenZ(token, c.getTokenZ(token));
 });
 
