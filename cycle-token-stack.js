@@ -27,13 +27,33 @@
 		return (!this.isTooltipOK || !e || e.altKey || e.ctrlKey || e.metaKey || ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
 	}
 
-	BuildStack(token) {
+	BuildStack(token, allTokens=false) {
 		this.tokenStack = [];
 		if (token) {
-			this.tokenStack = canvas.tokens.placeables.filter(t => (game.user.isGM || t.owner) &&
+			this.tokenStack = canvas.tokens.placeables.filter(t => (allTokens || game.user.isGM || t.owner) &&
 				(t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h));
 		}
 		return token;
+	}
+
+	getTokenZ(token)
+	{
+		let f = 1;
+		let flag = token.getFlag(CTS_MODULE_NAME, "zIndex");
+		if (flag === undefined || isNaN(flag)) 
+			f = (token.zIndex === undefined || isNaN(token.zIndex)) ? 1 : token.zIndex; 
+		else 
+			f = flag;
+		return f;
+	}
+	setTokenZ(token, value)
+	{
+		token.zIndex = (value === undefined || isNaN(value)) ? 1 : value;
+		if(game.user.isGM || token.owner)
+		{
+			token.update({ z: token.zIndex });
+			token.setFlag(CTS_MODULE_NAME, "zIndex", token.zIndex);
+		}
 	}
 
 	async RemoveTooltip() {
@@ -52,7 +72,8 @@
 				fullTemplate += `<div class="value">
 				<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
 				${tok.name}
-				${tok.isTargeted ? '<j class="far fa-eye"></j>' : ''}
+				${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
+				(${this.getTokenZ(tok)})
 				</div>`;
 		});
 		fullTemplate +=	`</div>`;
@@ -64,28 +85,47 @@
 		$('body.game').append(tooltip);
 	}
 
-	async CycleSelected(token) {
-		if (!token ||this.tokenStack.length < 2) return token;
+	CycleSelected(token) {
+		if (!token || this.tokenStack.length < 2) return token;
 		let idx = 0;
 		while (idx < this.tokenStack.length && this.tokenStack[idx].id !== token.id) 
 			++idx;
 		idx = ((idx + 1) % this.tokenStack.length);
-		await this.tokenStack[idx].control({releaseOthers: true});
-		return this.tokenStack[idx];
+		let tsi = this.tokenStack[idx];
+		this.setTokenZ(tsi, this.getTokenZ(token));
+		tsi.control({releaseOthers: true});
+		return tsi;
 	}
 
 	UncycleSelected(token) {
-		if (!token ||this.tokenStack.length < 2) return token;
-		token.release();
+		if (!token || this.tokenStack.length < 2) return token;
+
+		let tokenZ = this.getTokenZ(token);
+		let myMin = Math.max(1, tokenZ - 1);
+		let myMinDelta = 1;
 		this.tokenStack.forEach(t => {
 			if (t.id !== token.id)
-				t.control({releaseOthers: false});
-		});	
+			{
+				let tokz = this.getTokenZ(t);
+				myMinDelta = Math.min(myMinDelta, tokz - myMin - 1);
+			}
+		});
+		if (myMinDelta > 0) return token;
+		if (myMin > 1 - myMinDelta)
+		{ myMin += myMinDelta; myMinDelta = 0; }
+		this.setTokenZ(token, myMin);
+		this.tokenStack.forEach(t => {
+			if (t.id !== token.id)
+			{
+				tokenZ = this.getTokenZ(t);
+				this.setTokenZ(t, tokenZ - myMinDelta);
+			}
+		});
 		return token;
 	}
 
 	ReleaseHovered(token) {
-		this.BuildStack(token);
+		this.BuildStack(token, true);
 		this.SetTooltip(this.UncycleSelected(token));
 	}
 
@@ -95,17 +135,18 @@
 	}
 
 	OnKeyDown(e) {
-		if (this.IsDeactivated(e)) return;
-		if (this.hovering && e.key === this.keyCycleForward) {
-			if (this.hovering._controlled)
-				this.RefreshStack(this.hovering);
+		let c = _CycleTokenStack;
+		if (c.IsDeactivated(e)) return;
+		if (c.hovering && e.key === c.keyCycleForward) {
+			if (c.hovering._controlled)
+				c.RefreshStack(c.hovering);
 			else {
-				this.hovering.control({releaseOthers: true});
-				this.SetTooltip(this.hovering);
+				c.hovering.control({releaseOthers: true});
+				c.SetTooltip(c.hovering);
 			}
 		}
-		else if (this.hovering && e.key === this.keyCycleBackward)
-			this.ReleaseHovered(this.hovering);
+		else if (c.hovering && e.key === c.keyCycleBackward)
+			this.ReleaseHovered(c.hovering);
 	}
 
 	OnMouseMove(e) {
@@ -113,32 +154,31 @@
 		_CycleTokenStack.RemoveTooltip();
 	}
 
-	MouseDown(t, f) {
-		this.clicking = true;
-		this.cancelClick = false;
-		t.once('mousemove', this.OnMouseMove);
-		setTimeout( () => { 
-			t.off('mousemove', this.OnMouseMove);
-			if (!this.cancelClick) {
-				if (f) this.RefreshStack(t); else this.SetTooltip(t);
-			}
-			this.clicking = false;
-			this.cancelClick = false;
-		}, this.minClickDelay);
-	}
-	
 	WaitALittle(token) {
-		this.MouseDown(token, false);
+		this.clicking = true;
+		token.once('mousemove', this.OnMouseMove);
+		setTimeout( () => { 
+			token.off('mousemove', this.OnMouseMove);
+			this.SetTooltip(token);
+			this.clicking = false;
+		}, this.minClickDelay);
 	}
 
 	OnMouseDown(e) {
-		const c = _CycleTokenStack;
-		const oe = e.data.originalEvent;
+		let c = _CycleTokenStack;
+		let oe = e.data.originalEvent;
 		if (c.IsDeactivated(oe) || oe.shiftKey) return;
 		if (c.clicking) { c.cancelClick = true; return; }
-		c.MouseDown(this, true);
+		c.clicking = true;
+		c.cancelClick = false;
+		this.once('mousemove', c.OnMouseMove);
+		setTimeout( () => { 
+			this.off('mousemove', c.OnMouseMove);
+			if (!c.cancelClick)
+				c.RefreshStack(this);
+			c.clicking = false;
+		}, c.minClickDelay);
 	}
-	
 }
 
 
@@ -151,18 +191,21 @@ onkeydown = function (e) {
 };
 
 Hooks.on("controlToken", (token, controlled) => {
-	const c = _CycleTokenStack;
+	let c = _CycleTokenStack;
 	if (controlled) {
 		c.isTooltipOK = true;
 		token.on('mousedown', c.OnMouseDown);
-		c.WaitALittle(token);
+		if (!c.clicking) c.WaitALittle(token);
 	}
 	else
+	{
 		token.off('mousedown', c.OnMouseDown);
+	}
+	c.setTokenZ(token, c.getTokenZ(token));
 });
 
 Hooks.on("hoverToken", (token, hover) => {
-	const c = _CycleTokenStack;
+	let c = _CycleTokenStack;
 	if (hover) {
 		if (!c.clicking && !c.IsDeactivated(event)) {
 			c.hovering = token;
