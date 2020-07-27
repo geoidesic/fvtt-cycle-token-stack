@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.5.0] 2020-07-27
+### ADDED
+- Changed hotkeys to move hovered token all the way to the top or bottom of stack.
+- Added ability for player to move above or below non-controllable tokens using hotkeys.
+- Retains stack position between sessions or after refresh (F5).
+
 ## [0.4.2] 2020-07-26
 ### BUGFIXES
 - Tooltips were showing for all tokens after init of world.
