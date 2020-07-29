@@ -14,7 +14,7 @@
 	"scripts": ["./init.js", "./cycle-token-stack.js"],
 	"styles": ["./styles.css"],
 	"url": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack",
-	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.1/module.json",
-	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.1/cycle-token-stack.zip",
-	"changelog": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.1/changelog.md"
+	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/master/module.json",
+	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/master/cycle-token-stack.zip",
+	"changelog": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/master/changelog.md"
 }
