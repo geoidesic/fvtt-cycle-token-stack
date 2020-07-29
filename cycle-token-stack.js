@@ -4,7 +4,8 @@
  */
 
 /**
-  * Class for retaining current control and hover state and processing cycle requests.
+  * Class for retaining hover state and for processing cycle requests.
+  * Stores zIndex in data.flags for safe keeping between sessions.
   */
 
  class CycleTokenStack {
@@ -50,15 +51,10 @@
 		return value;
 	}
 	
-	setTokenZ(token, value)
-	{
+	setTokenZ(token, value) {
 		token.zIndex = (value === undefined || isNaN(value)) ? 0 : value;
-		if (this.IsControllable(token))
-		{
-			token.update({ z: token.zIndex });
-			if (game.user.isGM)
-				token.setFlag(CTS_MODULE_NAME, "zIndex", token.zIndex);
-		}
+		if (game.user.isGM)
+			token.setFlag(CTS_MODULE_NAME, "zIndex", token.zIndex);
 	}
 
 	ClearAllFlags() {
@@ -69,17 +65,24 @@
 
 	MoveAllFlags(delta) {
 		for (let t of canvas.tokens.placeables)  { 
+			// TBD: Compress range (plenty of holes between z-Indices (unless user stacked 180 tokens)
 			this.setTokenZ(t, Math.clamped(10 - this.maxZ, this.getTokenZ(t) + delta, this.maxZ - 10) );
 		}
 	}
 
-	RefreshPlayers(token) {
-		for (let t of canvas.tokens.placeables)  { 
-			this.setTokenZ(t, t.zIndex);
+	RefreshPlayers() {
+		if (game.user.isGM) {
+			for (let t of canvas.tokens.placeables) { 
+				this.setTokenZ(t, t.zIndex);
+			}
+			let myActivityData = { cycleTokenStack: { action: "refreshPlayers", sceneID: game.users.current.viewedScene } }; 
+			game.socket.emit("userActivity", game.user.id, myActivityData);
 		}
+		else
+			this.MoveAllFlags();
 	}
 
-	async RemoveTooltip() {
+	RemoveTooltip() {
 		$('.cts-tooltip').remove();
 	}
 
@@ -109,8 +112,7 @@
 		return t;
 	}
 
-	FindNextToken(token)
-	{
+	FindNextToken(token) {
 		if (!token || this.tokenStack.length < 2) return token;
 		let idx = 0;
 		while (idx < this.tokenStack.length && this.tokenStack[idx].id !== token.id) 
@@ -215,9 +217,11 @@
 	}
 }
 
+  /* ---------------------------------------- */
 
 let _CycleTokenStack = new CycleTokenStack();
 
+  /* ---------------------------------------- */
 
 onkeydown = function (e) {
 	e = e || event;
@@ -225,9 +229,8 @@ onkeydown = function (e) {
 };
 
 Hooks.on("controlToken", (token, controlled) => {
-	let c = _CycleTokenStack;
+	const c = _CycleTokenStack;
 	if (controlled) {
-		c.isTooltipOK = true;
 		token.on('mousedown', c.OnMouseDown);
 		c.MoveToTop(c.BuildStack(token, false));
 		c.controlling = token;
@@ -243,7 +246,7 @@ Hooks.on("controlToken", (token, controlled) => {
 });
 
 Hooks.on("hoverToken", (token, hover) => {
-	let c = _CycleTokenStack;
+	const c = _CycleTokenStack;
 	if (hover) {
 		if (!c.clicking && !c.IsDeactivated()) {
 			c.hovering = token;
@@ -258,8 +261,24 @@ Hooks.on("hoverToken", (token, hover) => {
 });
 
 Hooks.on("deleteToken", (token) => {
-	_CycleTokenStack.hovering = null;
-	_CycleTokenStack.RemoveTooltip();
+	const c = _CycleTokenStack;
+	c.hovering = null;
+	c.RemoveTooltip();
 });
 
-Hooks.on("ready", () => { _CycleTokenStack.MoveAllFlags(0); } );
+Hooks.on("canvasReady", () => { 
+	const c = _CycleTokenStack;
+	c.MoveAllFlags(0); 
+	c.isTooltipOK = true;
+
+	game.socket.on("userActivity", (t, r) => { 
+		if (r.cycleTokenStack && r.cycleTokenStack.action) {
+			switch (r.cycleTokenStack.action)
+			{
+				case "refreshPlayers":
+					if (game.users.current.viewedScene && r.cycleTokenStack.sceneID === game.users.current.viewedScene)
+						_CycleTokenStack.MoveAllFlags(0);
+			}
+		}
+	 });
+} );
