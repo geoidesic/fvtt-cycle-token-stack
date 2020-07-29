@@ -13,7 +13,6 @@
 	constructor() {
 		this.tokenStack = [];
 		this.hovering = null;
-		this.controlling = null;
 		this.cancelClick = false;
 		this.clicking = false;
 		this.isTooltipOK = false;
@@ -22,14 +21,15 @@
 		this.keyCycleBackward = ']';
 		this.showTokenList = "stacked";
 		this.minClickDelay = 300;
+		this.useAltitude = false;
 
-		this.maxZ = 99;
+		this.maxZ = 1000;
 	}
 
 	IsControllable(token) { return game.user.isGM || token.owner; }
 
 	IsDeactivated() {
-		return (!this.isTooltipOK || ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
+		return (this.useAltitude || !this.isTooltipOK || ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
 	}
 	IsModifierPressed(e) {
 		return (e && (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey));
@@ -78,8 +78,7 @@
 			let myActivityData = { cycleTokenStack: { action: "refreshPlayers", sceneID: game.users.current.viewedScene } }; 
 			game.socket.emit("userActivity", game.user.id, myActivityData);
 		}
-		else
-			this.MoveAllFlags();
+		else this.MoveAllFlags(0);
 	}
 
 	RemoveTooltip() {
@@ -99,7 +98,6 @@
 			<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
 			${tok.name}
 			${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
-			(${this.getTokenZ(tok)}) ${tok.zIndex}
 			</div>`;
 		});
 		fullTemplate +=	`</div>`;
@@ -170,10 +168,6 @@
 		else if (this.hovering && e.key === this.keyCycleBackward && !this.IsModifierPressed(e)) {
 			this.SetTooltip(this.MoveToBack(this.BuildStack(this.hovering, true)));
 		}
-		else if (e.key === this.keyCycleBackward && (e.ctrlKey || e.metaKey) && !e.altKey)
-		{
-			this.MoveAllFlags(0);
-		}
 		else if (e.key === this.keyCycleForward && (e.ctrlKey || e.metaKey) && !e.altKey)
 		{
 			this.RefreshPlayers();
@@ -197,15 +191,16 @@
 		setTimeout( () => { 
 			t.off('mousemove', this.OnMouseMove);
 			if (!this.cancelClick) {
-				if (f) this.CycleOneAbove(t, false); else this.SetTooltip(t);
+				this.CycleOneAbove(t, false);
 			}
 			this.clicking = false;
 			this.cancelClick = false;
 		}, this.minClickDelay);
 	}
 	
-	WaitALittle(token) {
-		this.MouseDown(token, false);
+	ActOnControl(token) {
+		if (this.IsDeactivated()) return;
+		this.SetTooltip(this.MoveToTop(this.BuildStack(token, true)));
 	}
 
 	OnMouseDown(e) {
@@ -217,7 +212,7 @@
 	}
 }
 
-  /* ---------------------------------------- */
+  /* ----------- Global Variable ------------ */
 
 let _CycleTokenStack = new CycleTokenStack();
 
@@ -232,17 +227,11 @@ Hooks.on("controlToken", (token, controlled) => {
 	const c = _CycleTokenStack;
 	if (controlled) {
 		token.on('mousedown', c.OnMouseDown);
-		c.MoveToTop(c.BuildStack(token, false));
-		c.controlling = token;
-		c.WaitALittle(token);
-	}
-	else
-	{
+		c.ActOnControl(token);
+	} else {
 		token.off('mousedown', c.OnMouseDown);
 		c.setTokenZ(token, c.getTokenZ(token));
-		c.controlling = null;
 	}
-
 });
 
 Hooks.on("hoverToken", (token, hover) => {
@@ -268,8 +257,8 @@ Hooks.on("deleteToken", (token) => {
 
 Hooks.on("canvasReady", () => { 
 	const c = _CycleTokenStack;
-	c.MoveAllFlags(0); 
 	c.isTooltipOK = true;
+	c.MoveAllFlags(0); 
 
 	game.socket.on("userActivity", (t, r) => { 
 		if (r.cycleTokenStack && r.cycleTokenStack.action) {

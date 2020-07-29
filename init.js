@@ -8,11 +8,21 @@ function modifySettings()
 		_CycleTokenStack.showTokenList = game.settings.get(CTS_MODULE_NAME, "showTokenList");
 		_CycleTokenStack.keyCycleForward = game.settings.get(CTS_MODULE_NAME, "keyCycleForward");
 		_CycleTokenStack.keyCycleBackward = game.settings.get(CTS_MODULE_NAME, "keyCycleBackward");
+		_CycleTokenStack.useAltitude = game.settings.get(CTS_MODULE_NAME, "useAltitude");
 	}
 }
 
 
 Hooks.once("init", () => {
+	game.settings.register(CTS_MODULE_NAME, "useAltitude",  {
+		name: game.i18n.localize('BBCTS.useAltitude.title'),
+		hint: game.i18n.localize('BBCTS.useAltitude.hint'),
+		scope: "world",
+		config: true,
+		default: false,
+		onChange: modifySettings,
+		type: Boolean
+	});
 	game.settings.register(CTS_MODULE_NAME, "showTokenList", {
 		name: game.i18n.localize('BBCTS.showTokenList.title'),
 		hint: game.i18n.localize('BBCTS.showTokenList.hint'),
