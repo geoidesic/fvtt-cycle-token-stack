@@ -7,7 +7,7 @@ div.cts-tooltip {
   border-radius: 3px;
   font-size: 1rem;
   position: absolute;
-  z-index: 10000;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   padding: 5px 5px;
@@ -28,7 +28,7 @@ div.cts-tooltip div.value {
 }
 
 div.cts-tooltip div.value i {
-  color: rgb(45, 72, 194);
+  color: rgb(75, 106, 243);
 	width: 25px;
 	text-align: center;
 	padding-right: 5px;

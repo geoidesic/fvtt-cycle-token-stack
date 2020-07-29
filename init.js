@@ -1,4 +1,5 @@
 const CTS_MODULE_NAME = 'cycle-token-stack';
+const CTS_FLAG_INDEX = 'zIndex';
 
 function modifySettings()
 {

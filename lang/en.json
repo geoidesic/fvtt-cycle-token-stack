@@ -7,7 +7,7 @@
 	"BBCTS.minClickDelay.title": "Click Threshold (milliseconds)",
 	"BBCTS.minClickDelay.hint": "Minimum duration (ms) between single clicks to trigger cycling; avoids conflict with double-click.",
 	"BBCTS.keyCycleForward.title": "Cycle Token Forward Key",
-	"BBCTS.keyCycleForward.hint": "Cycles to the next token in the stack and selects it.",
+	"BBCTS.keyCycleForward.hint": "Moves the token under the mouse to the top of the stack. Pressing Ctrl will align GM settings to players.",
 	"BBCTS.keyCycleBackward.title": "Push Token Behind Key",
-	"BBCTS.keyCycleBackward.hint": "Selects all tokens except the one being hovered over."
+	"BBCTS.keyCycleBackward.hint": "Moves the token under the mouse to bottom of the stack. Pressing Alt resets ordering."
 }
