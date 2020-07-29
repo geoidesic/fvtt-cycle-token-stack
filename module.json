@@ -15,6 +15,6 @@
 	"styles": ["./styles.css"],
 	"url": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack",
 	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/master/module.json",
-	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/master/cycle-token-stack.zip",
-	"changelog": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/master/changelog.md"
+	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.0/cycle-token-stack.zip",
+	"changelog": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.0/changelog.md"
 }
