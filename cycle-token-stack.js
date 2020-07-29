@@ -12,6 +12,7 @@
 	constructor() {
 		this.tokenStack = [];
 		this.hovering = null;
+		this.controlling = null;
 		this.cancelClick = false;
 		this.clicking = false;
 		this.isTooltipOK = false;
@@ -20,8 +21,11 @@
 		this.keyCycleBackward = ']';
 		this.showTokenList = "stacked";
 		this.minClickDelay = 300;
+
+		this.maxZ = 99;
 	}
 
+	IsControllable(token) { return game.user.isGM || token.owner; }
 
 	IsDeactivated() {
 		return (!this.isTooltipOK || ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
@@ -33,30 +37,45 @@
 	BuildStack(token, allTokens=false) {
 		this.tokenStack = [];
 		if (token) {
-			this.tokenStack = canvas.tokens.placeables.filter(t => (allTokens || game.user.isGM || t.owner) &&
+			this.tokenStack = canvas.tokens.placeables.filter(t => (allTokens || this.IsControllable(t)) &&
 				(t.x + t.w > token.x && t.y + t.h > token.y && t.x < token.x + token.w && t.y < token.y + token.h));
 		}
 		return token;
 	}
 
-	getTokenZ(token)
-	{
-		let value = 1;
-		let flag = token.getFlag(CTS_MODULE_NAME, "zIndex");
-		if (flag === undefined || isNaN(flag)) 
-			value = (token.zIndex === undefined || isNaN(token.zIndex)) ? value : token.zIndex; 
-		else 
-			value = flag;
+	getTokenZ(token) {
+		let value = token.getFlag(CTS_MODULE_NAME, "zIndex");
+		if (value === undefined || isNaN(value)) 
+			value = (token.zIndex === undefined || isNaN(token.zIndex)) ? 1 : token.zIndex; 
 		return value;
 	}
 	
 	setTokenZ(token, value)
 	{
-		token.zIndex = (value === undefined || isNaN(value)) ? 1 : value;
-		if(game.user.isGM || token.owner)
+		token.zIndex = (value === undefined || isNaN(value)) ? 0 : value;
+		if (this.IsControllable(token))
 		{
 			token.update({ z: token.zIndex });
-			token.setFlag(CTS_MODULE_NAME, "zIndex", token.zIndex);
+			if (game.user.isGM)
+				token.setFlag(CTS_MODULE_NAME, "zIndex", token.zIndex);
+		}
+	}
+
+	ClearAllFlags() {
+		for (let t of canvas.tokens.placeables)  { 
+			this.setTokenZ(t, 0);
+		}
+	}
+
+	MoveAllFlags(delta) {
+		for (let t of canvas.tokens.placeables)  { 
+			this.setTokenZ(t, Math.clamped(10 - this.maxZ, this.getTokenZ(t) + delta, this.maxZ - 10) );
+		}
+	}
+
+	RefreshPlayers(token) {
+		for (let t of canvas.tokens.placeables)  { 
+			this.setTokenZ(t, t.zIndex);
 		}
 	}
 
@@ -66,19 +85,19 @@
 
 	SetTooltip(t) {
 		this.RemoveTooltip();
-		if (!t) return;
+		if (!t) return t;
 		this.BuildStack(t);
 		let showTooltip = this.showTokenList;
 		if (showTooltip == "hide" || (showTooltip == "always" && this.tokenStack.length < 1) || (showTooltip == "stacked" && this.tokenStack.length < 2))
-			return;
+			return t;
 		let fullTemplate = `<div class="section">`;
 		this.tokenStack.forEach(tok => {
-				fullTemplate += `<div class="value">
-				<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
-				${tok.name}
-				${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
-				(${this.getTokenZ(tok)})
-				</div>`;
+			fullTemplate += `<div class="value">
+			<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
+			${tok.name}
+			${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
+			(${this.getTokenZ(tok)}) ${tok.zIndex}
+			</div>`;
 		});
 		fullTemplate +=	`</div>`;
 
@@ -87,78 +106,79 @@
 		tooltip.css('top', (t.worldTransform.ty + (((t.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
 		tooltip.html(fullTemplate);
 		$('body.game').append(tooltip);
+		return t;
 	}
 
-	MoveAboveToken(token) {
+	FindNextToken(token)
+	{
 		if (!token || this.tokenStack.length < 2) return token;
 		let idx = 0;
 		while (idx < this.tokenStack.length && this.tokenStack[idx].id !== token.id) 
 			++idx;
 		idx = ((idx + 1) % this.tokenStack.length);
-		let tsi = this.tokenStack[idx];
-		tsi.control({releaseOthers: true});
-		let newZ = 0;
-		this.tokenStack.forEach(t => { if (t.id !== tsi.id)	newZ = Math.max(newZ, this.getTokenZ(t)); });
-		if (newZ >= this.getTokenZ(tsi))
-		{
-			this.setTokenZ(tsi, newZ);
-		}
-		return tsi;
+		return this.tokenStack[idx];
 	}
 
 	MoveToBack(token) {
 		if (!token || this.tokenStack.length < 2) return token;
-
-		let tokenZ = this.getTokenZ(token);
-		let myMin = Math.max(1, tokenZ - 1);
-		let myMinDelta = 1;
+		let oldZ = this.getTokenZ(token);
+		let newZ = oldZ;
 		this.tokenStack.forEach(t => {
-			if (t.id !== token.id)
-			{
-				let tokz = this.getTokenZ(t);
-				myMinDelta = Math.min(myMinDelta, tokz - myMin - 1);
-			}
+			if (t.id !== token.id) newZ = Math.min(newZ, this.getTokenZ(t)); 
 		});
-		if (myMinDelta > 0) return token;
-		if (myMin > 1 - myMinDelta)
-		{ myMin += myMinDelta; myMinDelta = 0; }
-		this.setTokenZ(token, myMin);
-		this.tokenStack.forEach(t => {
-			if (t.id !== token.id)
-			{
-				tokenZ = this.getTokenZ(t);
-				this.setTokenZ(t, tokenZ - myMinDelta);
-			}
-		});
+		if (newZ < -this.maxZ) 
+			this.MoveAllFlags(this.maxZ);
+		else
+			this.setTokenZ(token, (newZ < oldZ) ? newZ - 1 : newZ);
 		return token;
 	}
 
 	MoveToTop(token) {
 		if (!token || this.tokenStack.length < 2) return token;
-		token.control({releaseOthers: true});
-		let newZ = 0;
-		this.tokenStack.forEach(t => { if (t.id !== token.id) newZ = Math.max(newZ, this.getTokenZ(t)); });
-		if (newZ >= this.getTokenZ(token))
-		{
-			this.setTokenZ(token, newZ + 1);
-		}
+		let oldZ = this.getTokenZ(token);
+		let newZ = oldZ;
+		this.tokenStack.forEach(t => {
+			if (t.id !== token.id) newZ = Math.max(newZ, this.getTokenZ(t)); 
+		});
+		if (newZ > this.maxZ) 
+			this.MoveAllFlags( -this.maxZ);
+		else
+			this.setTokenZ(token, (newZ !== oldZ) ? newZ + 1 : oldZ + 1);
 		return token;
 	}
 
 	CycleOneAbove(token, allTokens) {
 		this.BuildStack(token, allTokens);
-		this.SetTooltip(this.MoveAboveToken(token));
+		let newToken = this.FindNextToken(token);
+		if (newToken._controlled || !this.IsControllable(newToken))
+			this.SetTooltip(this.MoveToTop(newToken));
+		else
+			newToken.control({releaseOthers: true});
 	}
 
 	OnKeyDown(e) {
 		if (this.IsDeactivated()) return;
 		if (this.hovering && e.key === this.keyCycleForward && !this.IsModifierPressed(e)) {
-			this.BuildStack(this.hovering, true);
-			this.SetTooltip(this.MoveToTop(this.hovering));
+			let newToken = this.hovering;
+			if (newToken._controlled || !this.IsControllable(newToken))
+				this.SetTooltip(this.MoveToTop(this.BuildStack(newToken, true)));
+			else
+				newToken.control({releaseOthers: true});
 		}
 		else if (this.hovering && e.key === this.keyCycleBackward && !this.IsModifierPressed(e)) {
-			this.BuildStack(this.hovering, true);
-			this.SetTooltip(this.MoveToBack(this.hovering));
+			this.SetTooltip(this.MoveToBack(this.BuildStack(this.hovering, true)));
+		}
+		else if (e.key === this.keyCycleBackward && (e.ctrlKey || e.metaKey) && !e.altKey)
+		{
+			this.MoveAllFlags(0);
+		}
+		else if (e.key === this.keyCycleForward && (e.ctrlKey || e.metaKey) && !e.altKey)
+		{
+			this.RefreshPlayers();
+		}
+		else if (e.key === this.keyCycleBackward && !(e.ctrlKey || e.metaKey) && e.altKey)
+		{
+			this.ClearAllFlags();
 		}
 	}
 
@@ -206,18 +226,18 @@ onkeydown = function (e) {
 
 Hooks.on("controlToken", (token, controlled) => {
 	let c = _CycleTokenStack;
-	let tokZ = c.getTokenZ(token);
 	if (controlled) {
 		c.isTooltipOK = true;
 		token.on('mousedown', c.OnMouseDown);
+		c.MoveToTop(c.BuildStack(token, false));
+		c.controlling = token;
 		c.WaitALittle(token);
-		c.setTokenZ(token, tokZ + 1);
 	}
 	else
 	{
 		token.off('mousedown', c.OnMouseDown);
-		if (tokZ > 0)
-			c.setTokenZ(token, tokZ - 1);
+		c.setTokenZ(token, c.getTokenZ(token));
+		c.controlling = null;
 	}
 
 });
@@ -241,3 +261,5 @@ Hooks.on("deleteToken", (token) => {
 	_CycleTokenStack.hovering = null;
 	_CycleTokenStack.RemoveTooltip();
 });
+
+Hooks.on("ready", () => { _CycleTokenStack.MoveAllFlags(0); } );
