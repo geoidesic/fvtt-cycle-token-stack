@@ -1,8 +1,8 @@
 {
 	"name": "cycle-token-stack",
 	"title": "Cycle Token Stack",
-	"description": "Cycles through a stack of tokens using repeated left-clicks or keystroke.  Offers key to push one token to back of stack.",
-	"version": "0.5.0",
+	"description": "Cycles through a stack of tokens using repeated left-clicks or hotkeys. Syncs state between sessions.",
+	"version": "0.5.1",
 	"author": "Beer Buddy (BeerBuddy#0901 discord)",
 	"languages": [ {
 		"lang": "en", 
@@ -14,7 +14,7 @@
 	"scripts": ["./init.js", "./cycle-token-stack.js"],
 	"styles": ["./styles.css"],
 	"url": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack",
-	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/master/module.json",
-	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.0/cycle-token-stack.zip",
-	"changelog": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.0/changelog.md"
+	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.1/module.json",
+	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.1/cycle-token-stack.zip",
+	"changelog": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/v0.5.1/changelog.md"
 }
