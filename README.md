@@ -1,9 +1,9 @@
 # Cycle Token Stack
-For the Fountry Virtual Tabletop (FVTT), this small module helps you to cycle through tokens that are stacked upon one another using left-mouse clicks or a use '[' and ']' hotkeys all the way to the top or bottom of stack -- even those you can't control.
+For the Fountry Virtual Tabletop (FVTT), this module helps you to cycle through tokens that are stacked upon one another using left-mouse clicks or using '[' and ']' hotkeys to jump a token to the top or bottom of the stack -- even those tokens players can't control. Stores state automatically between sessions and pushes GM entire token state for a scene to players with a hotkey.
 
 # Installation
 ## Three ways to install the module for Foundry VTT.
-1. (Recommended) Install module from within Foundry VTT. The module is called "Cycle Token Stack". 
+1. _(Recommended)_ Install module from within Foundry VTT. The module is called "Cycle Token Stack". 
 
 2. Copy the following text (not the file it points to): <br>
 `https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/master/module.json` <br>
@@ -23,24 +23,27 @@ Once you launch the world, be sure to enable the module using the Module Configu
  - Hotkeys are customizable on a player-by-player basis. Also, tooltip can be turned off.
  - In "select target" mode, the cycling of the stack is disabled and tooltips hidden.
  - A stack is defined as any tokens overlapping with the current token being hovered over by the mouse. It may include tokens that are not directly under the mouse cursor.  This is done so that small tokens buried behind a large token can be retrieved without knowing the precise location of the buried token.
+ - GM pressing Ctrl+`[` will sync the players machines with the current GM stack state for the entire scene.
+ - A player pressing Ctrl+`[` will retrieve the current stack state of the GM.
+ - GM pressing Alt+`]` will reset the z-buffer in order to start from scratch.
  
  # Module Configuration Settings
 The Cycle Token Stack module has three configuration settings that each player can define:
- - Define a keystroke that performs a _move to top_ action.  The default is the '[' character (left square bracket). Leave the field blank if you don't want a hotkey.
- - Define a keystorke that performs a _move to bottom_ action.  The default is the ']' character (right square bracket).
+ - Define a keystroke that performs a _move to top_ action and _sync player_ action.  The default is the '[' character (left square bracket). Leave the field blank if you don't want a hotkey.
+ - Define a keystorke that performs a _move to bottom_ action and _reset stacks_ action.  The default is the ']' character (right square bracket).
  - Control when the tooltip is displayed. The default is to have the tooltip appear when two or more tokens are stacked.
  - Control the click delay that the module waits before cycling the tokens. Any click or move happening before this delay will cancel the cycle operation. This is needed to avoid conflict with double-click behavior.  The delay is defined in milliseconds and defaults to 300.  A value above 250 and below 1000 is recommended.
  
  # Known Issues
  - The tooltip will sometimes refresh twice after cycling a token.
  - If a large token has a number of smaller ones spread around under it, the selection process may not visit every small token under the large one.
- - Changes made on the GM machine are not reflected on the player machine.
+ - Cannot push player stack state to the GM's machine; does not retain local stack state for player between sessions.
 <br>
 If you find any other issues or have suggestions, feel free to add an Issue to this project on GitHub.  Be sure to be specific in how to recreate it so that I can resolve it.
 
 # Troubleshooting
  - The click-cycling or keystroke becomes unresponsive. Moving the mouse cursor off the token and back on will 'wake up' the cycle token behavior.
- - Player cannot see the tooltip or nothing happens when clicking a token: If a player can only control a single token (or no tokens), then the tooltip will not be displayed and mouse-cycling is disabled. Check player permissions for token to see if they own the token.
+ - Player cannot see the tooltip or nothing happens when clicking a token: If a player can only control a single token (or no tokens), then the tooltip will not be displayed and mouse-cycling is disabled. Player can use hotkeys to arrange a stack of uncontrollable tokens.
  - Clicking multiple times causes character sheet to appear: This means you are clicking too quickly in succession. This is intended behavior. There is a required delay between clicks so that double-click functionality can pass through.
 
 ## Copyright Notice

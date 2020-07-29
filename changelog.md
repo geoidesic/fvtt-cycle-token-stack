@@ -4,7 +4,12 @@
 ### ADDED
 - Changed hotkeys to move hovered token all the way to the top or bottom of stack.
 - Added ability for player to move above or below non-controllable tokens using hotkeys.
-- Retains stack position between sessions or after refresh (F5).
+- Retains stack position between sessions or after refresh (F5) -- GM settings are retained.
+- Allow GM to push his stack state to player machines.
+### BUGFIXES
+- Tokens on player machine would not cycle properly, if at all.
+- Resetting token stacks on player machine did nothing.
+- Reworked event handling so cycling and tooltips behave more often.
 
 ## [0.4.2] 2020-07-26
 ### BUGFIXES
