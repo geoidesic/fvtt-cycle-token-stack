@@ -19,7 +19,7 @@
 
 		this.keyCycleForward = '[';
 		this.keyCycleBackward = ']';
-		this.showTokenList = "stacked";
+		this.showTokenList = 'stacked';
 		this.minClickDelay = 300;
 
 		this.maxZ = 1000;
@@ -28,13 +28,12 @@
 	IsControllable(token) { return game.user.isGM || token.owner; }
 
 	IsDeactivated() {
-		return (!this.isTooltipOK || ui.controls.controls.find( n => n.name === "token" ).activeTool === "target");
+		return (!this.isTooltipOK || ui.controls.controls.find( n => n.name === 'token' ).activeTool === '"target');
 	}
 	IsModifierPressed(e) {
 		return (e && (e.altKey || e.ctrlKey || e.metaKey));
 	}
-
-	BuildStack(token, allTokens=false) {
+	BuildStack(token, allTokens = false) {
 		this.tokenStack = [];
 		if (token) {
 			this.tokenStack = canvas.tokens.placeables.filter(t => (allTokens || this.IsControllable(t)) &&
@@ -48,54 +47,53 @@
 		let fValue = token.getFlag(CTS_MODULE_NAME, CTS_FLAG_INDEX);
 		if (fValue === undefined || isNaN(fValue))
 			fValue = zValue;
-		
+
 		return (game.user.isGM || zValue === 0) ? fValue : zValue;
 	}
-	
-	setTokenZ(token, value) {
+
+	async setTokenZ(token, value) {
 		token.zIndex = (value === undefined || isNaN(value)) ? 0 : value;
 		if (game.user.isGM)
 			token.setFlag(CTS_MODULE_NAME, CTS_FLAG_INDEX, token.zIndex);
 	}
 
-	GetCachedZ()
-	{
-		for (let t of canvas.tokens.placeables) { 
+	async RevertToCachedZ() {
+		for (const t of canvas.tokens.placeables) {
 			_CycleTokenStack.setTokenZ(t, t.getFlag(CTS_MODULE_NAME, CTS_FLAG_INDEX));
 		}
 	}
-
-	ClearAllFlags() {
+	async ClearAllFlags() {
 		if (game.user.isGM) {
-			for (let t of canvas.tokens.placeables)
+			for (const t of canvas.tokens.placeables)
 			{
 				t.zIndex = 0;
 				t.unsetFlag(CTS_MODULE_NAME, CTS_FLAG_INDEX);
 			}
 		} else
-			this.GetCachedZ();
+			this.RevertToCachedZ();
 	}
 
-	MoveAllFlags(delta) {
-		for (let t of canvas.tokens.placeables)  { 
-			// TBD: Compress range (plenty of holes between z-Indices (unless user stacked 180 tokens)
+	async MoveAllFlags(delta) {
+		for (const t of canvas.tokens.placeables)  { 
+			// TBD: Compress range (plenty of holes between z-Indices (unless user stacked 1980 tokens)
 			this.setTokenZ(t, Math.clamped(10 - this.maxZ, this.getTokenZ(t) + delta, this.maxZ - 10) );
 		}
 	}
 
-	RefreshPlayers() {
+	async RefreshPlayers() {
 		if (game.user.isGM) {
-			for (let t of canvas.tokens.placeables) {
-				this.setTokenZ(t, t.zIndex);
+			for await (const t of canvas.tokens.placeables) {
+				if (this.getTokenZ(t) !== t.zIndex)
+					this.setTokenZ(t, t.zIndex);
 			}
-			let myActivityData = { cycleTokenStack: { action: "refreshPlayers", sceneID: game.users.current.viewedScene } }; 
-			game.socket.emit("userActivity", game.user.id, myActivityData);
+			const myActivityData = { cycleTokenStack: { action: 'refreshPlayers', sceneID: game.users.current.viewedScene } }; 
+			game.socket.emit('userActivity', game.user.id, myActivityData);
 		}
-		else this.GetCachedZ();
+		else this.RevertToCachedZ();
 	}
 
 	RemoveTooltip() {
-		$('.cts-tooltip').remove();
+		$('.cts-stack-tooltip').remove();
 	}
 
 	SetTooltip(t) {
@@ -103,7 +101,7 @@
 		if (!t) return t;
 		this.BuildStack(t, false);
 		let showTooltip = this.showTokenList;
-		if (showTooltip == "hide" || (showTooltip == "always" && this.tokenStack.length < 1) || (showTooltip == "stacked" && this.tokenStack.length < 2))
+		if (showTooltip == 'hide' || (showTooltip == 'always' && this.tokenStack.length < 1) || (showTooltip == 'stacked' && this.tokenStack.length < 2))
 			return t;
 		let fullTemplate = `<div class="section">`;
 		this.tokenStack.forEach(tok => {
@@ -115,7 +113,7 @@
 		});
 		fullTemplate +=	`</div>`;
 
-		let tooltip = $(`<div class="cts-tooltip"></div>`);
+		let tooltip = $(`<div class="cts-stack-tooltip"></div>`);
 		tooltip.css('left', (t.worldTransform.tx + 0) + 'px');
 		tooltip.css('top', (t.worldTransform.ty + (((t.data.height * canvas.dimensions.size) + 25) * canvas.scene._viewPosition.scale)) + 'px');
 		tooltip.html(fullTemplate);
@@ -125,20 +123,18 @@
 
 	FindNextToken(token) {
 		if (!token || this.tokenStack.length < 2) return token;
-		let idx = 0;
-		while (idx < this.tokenStack.length && this.tokenStack[idx].id !== token.id) 
-			++idx;
+		let idx = this.tokenStack.findIndex(t => t.id === token.id);
 		idx = ((idx + 1) % this.tokenStack.length);
 		return this.tokenStack[idx];
 	}
 
-	MoveToBack(token) {
+	async MoveToBack(token) {
 		if (!token || this.tokenStack.length < 2) return token;
 		let oldZ = this.getTokenZ(token);
 		let newZ = oldZ;
-		this.tokenStack.forEach(t => {
+		for (const t of this.tokenStack) {
 			if (t.id !== token.id) newZ = Math.min(newZ, this.getTokenZ(t)); 
-		});
+		}
 		if (newZ < -this.maxZ) 
 			this.MoveAllFlags(this.maxZ);
 		else
@@ -146,13 +142,13 @@
 		return token;
 	}
 
-	MoveToTop(token) {
+	async MoveToTop(token) {
 		if (!token || this.tokenStack.length < 2) return token;
 		let oldZ = this.getTokenZ(token);
 		let newZ = oldZ;
-		this.tokenStack.forEach(t => {
+		for (const t of this.tokenStack) {
 			if (t.id !== token.id) newZ = Math.max(newZ, this.getTokenZ(t)); 
-		});
+		}
 		if (newZ > this.maxZ) 
 			this.MoveAllFlags( -this.maxZ);
 		else
@@ -169,17 +165,17 @@
 			newToken.control({releaseOthers: true});
 	}
 
-	OnKeyDown(e) {
+	async OnKeyDown(e) {
 		if (this.IsDeactivated()) return;
 		if (this.hovering && e.key === this.keyCycleForward && !this.IsModifierPressed(e)) {
 			let newToken = this.hovering;
 			if (newToken._controlled || !this.IsControllable(newToken))
-				this.SetTooltip(this.MoveToTop(this.BuildStack(newToken, true)));
+				this.MoveToTop(this.BuildStack(newToken, true)).then(t => this.SetTooltip(t));
 			else
 				newToken.control({releaseOthers: true});
 		}
 		else if (this.hovering && e.key === this.keyCycleBackward && !this.IsModifierPressed(e)) {
-			this.SetTooltip(this.MoveToBack(this.BuildStack(this.hovering, true)));
+			this.MoveToBack(this.BuildStack(this.hovering, true)).then(t => this.SetTooltip(t));
 		}
 		else if (e.key === this.keyCycleForward && (e.ctrlKey || e.metaKey) && !e.altKey)
 		{
@@ -191,12 +187,12 @@
 		}
 	}
 
-	OnMouseMove(e) {
+	async OnMouseMove(e) {
 		_CycleTokenStack.cancelClick = true;
 		_CycleTokenStack.RemoveTooltip();
 	}
 
-	MouseDown(t, f) {
+	async MouseDown(t, f) {
 		this.clicking = true;
 		this.cancelClick = false;
 		t.once('mousemove', this.OnMouseMove);
@@ -210,12 +206,12 @@
 		}, this.minClickDelay);
 	}
 	
-	ActOnControl(token) {
+	async ActOnControl(token) {
 		if (this.IsDeactivated()) return;
-		this.SetTooltip(this.MoveToTop(this.BuildStack(token, true)));
+		this.MoveToTop(this.BuildStack(token, true)).then(t => this.SetTooltip(t));
 	}
 
-	OnMouseDown(e) {
+	async OnMouseDown(e) {
 		const c = _CycleTokenStack;
 		if (c.IsDeactivated()) return;
 		const oe = e.data.originalEvent;
@@ -231,13 +227,15 @@ let _CycleTokenStack = new CycleTokenStack();
 
   /* ---------------------------------------- */
 
-onkeydown = function (e) {
+onkeydown = async (e) => {
 	e = e || event;
+	if (_CycleTokenStack.IsDeactivated()) return;
 	_CycleTokenStack.OnKeyDown(e);
 };
 
-Hooks.on("controlToken", (token, controlled) => {
+Hooks.on('controlToken', async (token, controlled) => {
 	const c = _CycleTokenStack;
+	if (c.IsDeactivated()) return;
 	if (controlled) {
 		token.on('mousedown', c.OnMouseDown);
 		c.ActOnControl(token);
@@ -247,8 +245,9 @@ Hooks.on("controlToken", (token, controlled) => {
 	}
 });
 
-Hooks.on("hoverToken", (token, hover) => {
+Hooks.on('hoverToken', async (token, hover) => {
 	const c = _CycleTokenStack;
+	if (c.IsDeactivated()) return;
 	if (hover) {
 		if (!c.clicking && !c.IsDeactivated()) {
 			c.hovering = token;
@@ -262,21 +261,21 @@ Hooks.on("hoverToken", (token, hover) => {
 	}
 });
 
-Hooks.on("deleteToken", (token) => {
+Hooks.on('deleteToken', async (token) => {
 	const c = _CycleTokenStack;
 	c.hovering = null;
 	c.RemoveTooltip();
 });
 
-Hooks.on("canvasReady", () => { 
+Hooks.on('canvasReady', async () => { 
 	const c = _CycleTokenStack;
 	c.isTooltipOK = true;
-	c.GetCachedZ();
+	c.RevertToCachedZ();
 
-	game.socket.on("userActivity", (t, r) => { 
-		if (r.cycleTokenStack && r.cycleTokenStack.action && r.cycleTokenStack.action === "refreshPlayers") {
+	game.socket.on('userActivity', async (t, r) => { 
+		if (r.cycleTokenStack && r.cycleTokenStack.action && r.cycleTokenStack.action === 'refreshPlayers') {
 			if (game.users.current.viewedScene && r.cycleTokenStack.sceneID === game.users.current.viewedScene)
-				_CycleTokenStack.GetCachedZ();
+				_CycleTokenStack.RevertToCachedZ();
 		}
 	 });
 } );
