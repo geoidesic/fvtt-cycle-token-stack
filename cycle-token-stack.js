@@ -64,8 +64,7 @@
 	}
 	async ClearAllFlags() {
 		if (game.user.isGM) {
-			for (const t of canvas.tokens.placeables)
-			{
+			for (const t of canvas.tokens.placeables) {
 				t.zIndex = 0;
 				t.unsetFlag(CTS_MODULE_NAME, CTS_FLAG_INDEX);
 			}
@@ -73,10 +72,17 @@
 			this.RevertToCachedZ();
 	}
 
-	async MoveAllFlags(delta) {
+	async MoveAllFlags() {
+		let zzzs = new Set();
+		for (const t of canvas.tokens.placeables)
+			zzzs.add(this.getTokenZ(t));
+
+		let zMap = new Map();
+		let Idx = (zzzs.length > this.maxZ - 10) ? -zzzs.length : 0;
+		zzzs.forEach(t => zMap.set(t, Idx++));
+
 		for (const t of canvas.tokens.placeables)  { 
-			// TBD: Compress range (plenty of holes between z-Indices (unless user stacked 1980 tokens)
-			this.setTokenZ(t, Math.clamped(10 - this.maxZ, this.getTokenZ(t) + delta, this.maxZ - 10) );
+			this.setTokenZ(t, Math.clamped(10 - this.maxZ, zMap.get(t.zIndex), this.maxZ - 10) );
 		}
 	}
 
@@ -109,6 +115,7 @@
 			<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
 			${tok.name}
 			${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
+			(${this.getTokenZ(tok)},${tok.zIndex})
 			</div>`;
 		});
 		fullTemplate +=	`</div>`;
@@ -136,7 +143,7 @@
 			if (t.id !== token.id) newZ = Math.min(newZ, this.getTokenZ(t)); 
 		}
 		if (newZ < -this.maxZ) 
-			this.MoveAllFlags(this.maxZ);
+			this.MoveAllFlags();
 		else
 			this.setTokenZ(token, (newZ < oldZ) ? newZ - 1 : newZ);
 		return token;
@@ -150,7 +157,7 @@
 			if (t.id !== token.id) newZ = Math.max(newZ, this.getTokenZ(t)); 
 		}
 		if (newZ > this.maxZ) 
-			this.MoveAllFlags( -this.maxZ);
+			this.MoveAllFlags();
 		else
 			this.setTokenZ(token, (newZ !== oldZ) ? newZ + 1 : oldZ + 1);
 		return token;
@@ -177,12 +184,10 @@
 		else if (this.hovering && e.key === this.keyCycleBackward && !this.IsModifierPressed(e)) {
 			this.MoveToBack(this.BuildStack(this.hovering, true)).then(t => this.SetTooltip(t));
 		}
-		else if (e.key === this.keyCycleForward && (e.ctrlKey || e.metaKey) && !e.altKey)
-		{
+		else if (e.key === this.keyCycleForward && (e.ctrlKey || e.metaKey) && !e.altKey) {
 			this.RefreshPlayers();
 		}
-		else if (e.key === this.keyCycleBackward && !(e.ctrlKey || e.metaKey) && e.altKey)
-		{
+		else if (e.key === this.keyCycleBackward && !(e.ctrlKey || e.metaKey) && e.altKey) {
 			this.ClearAllFlags();
 		}
 	}
