@@ -77,12 +77,13 @@
 		for (const t of canvas.tokens.placeables)
 			zzzs.add(this.getTokenZ(t));
 
+		const bufferedMaxZ = Math.floor(this.maxZ * 0.9);
 		let zMap = new Map();
-		let Idx = (zzzs.length > this.maxZ - 10) ? -zzzs.length : 0;
+		let Idx = (zzzs.length > bufferedMaxZ) ? -zzzs.length : 0;
 		zzzs.forEach(t => zMap.set(t, Idx++));
 
 		for (const t of canvas.tokens.placeables)  { 
-			this.setTokenZ(t, Math.clamped(10 - this.maxZ, zMap.get(t.zIndex), this.maxZ - 10) );
+			this.setTokenZ(t, Math.clamped(-bufferedMaxZ, zMap.get(t.zIndex), bufferedMaxZ) );
 		}
 	}
 
@@ -115,7 +116,6 @@
 			<i class="${tok._controlled ? 'fa fa-check' : 'fa fa-square-o'}"></i>
 			${tok.name}
 			${tok.isTargeted ? '<j class="far fa-eye"></j>' : ' '}
-			(${this.getTokenZ(tok)},${tok.zIndex})
 			</div>`;
 		});
 		fullTemplate +=	`</div>`;
