@@ -193,11 +193,12 @@
 	}
 
 	async OnMouseMove(e) {
-		_CycleTokenStack.cancelClick = true;
-		_CycleTokenStack.RemoveTooltip();
+		const c = _CycleTokenStack;
+		c.cancelClick = true;
+		c.RemoveTooltip();
 	}
 
-	async MouseDown(t, f) {
+	async MouseDown(t) {
 		this.clicking = true;
 		this.cancelClick = false;
 		t.once('mousemove', this.OnMouseMove);
@@ -222,7 +223,7 @@
 		const oe = e.data.originalEvent;
 		if (c.IsModifierPressed(oe) || oe.shiftKey) return;
 		if (c.clicking) { c.cancelClick = true; return; }
-		c.MouseDown(this, true);
+		c.MouseDown(this);
 	}
 }
 
