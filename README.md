@@ -35,9 +35,9 @@ The Cycle Token Stack module has three configuration settings that each player c
  - Control the click delay that the module waits before cycling the tokens. Any click or move happening before this delay will cancel the cycle operation. This is needed to avoid conflict with double-click behavior.  The delay is defined in milliseconds and defaults to 300.  A value above 250 and below 1000 is recommended.
  
  # Known Issues
- - The tooltip will sometimes refresh twice after cycling a token.
+ - The module sometimes becomes unresponsive after moving the token on top of other tokens.
  - If a large token has a number of smaller ones spread around under it, the selection process may not visit every small token under the large one.
- - Cannot push player stack state to the GM's machine; does not retain local stack state for player between sessions.
+ - Cannot push player stack state to the GM's machine; does not retain player stack state for player between sessions.
 <br>
 If you find any other issues or have suggestions, feel free to add an Issue to this project on GitHub.  Be sure to be specific in how to recreate it so that I can resolve it.
 
