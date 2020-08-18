@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.5.4] 2020-08-18
+### BUGFIXES
+- **IMPORTANT:** Fixed huge memory and resource consumption at the loss of some functionality. Worth it.
+- Removed tooltips
+
 ## [0.5.3] 2020-08-11
 ### BUGFIXES
 - Improved performance of module.
