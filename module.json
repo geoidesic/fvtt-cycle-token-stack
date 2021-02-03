@@ -1,21 +1,23 @@
 {
-	"name": "cycle-token-stack",
-	"title": "Cycle Token Stack",
-	"description": "Cycles through a stack of tokens using repeated left-clicks or hotkeys.",
-	"version": "0.5.4",
-	"author": "Beer Buddy (BeerBuddy#0901 discord)",
-	"languages": [ {
-		"lang": "en", 
-		"name": "English", 
-		"path": "./lang/en.json"
-	} ],
-	"minimumCoreVersion": "0.6.3",
-	"compatibleCoreVersion": "0.6.5",
-	"scripts": ["./init.js", "./cycle-token-stack.js"],
-	"styles": ["./styles.css"],
-	"url": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack",
-	"manifest": "https://raw.githubusercontent.com/aka-beer-buddy/fvtt-cycle-token-stack/master/module.json",
-	"download": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.4/cycle-token-stack.zip",
-	"readme": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.4/README.md",
-	"changelog": "https://github.com/aka-beer-buddy/fvtt-cycle-token-stack/raw/v0.5.4/changelog.md"
+  "name": "cycle-token-stack",
+  "title": "Cycle Token Stack",
+  "description": "Cycles through a stack of tokens using repeated left-clicks or hotkeys.",
+  "version": "0.5.4",
+  "author": "Beer Buddy (BeerBuddy#0901 discord)",
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "./lang/en.json"
+    }
+  ],
+  "minimumCoreVersion": "0.6.3",
+  "compatibleCoreVersion": "0.6.5",
+  "scripts": ["./init.js", "./cycle-token-stack.js"],
+  "styles": ["./styles.css"],
+  "url": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack",
+  "manifest": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/module.json",
+  "download": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/cycle-token-stack.zip",
+  "readme": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/README.md",
+  "changelog": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/changelog.md"
 }
