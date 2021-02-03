@@ -17,7 +17,7 @@
   "styles": ["./styles.css"],
   "url": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack",
   "manifest": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/module.json",
-  "download": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/cycle-token-stack.zip",
+  "download": "https://github.com/geoidesic/fvtt-cycle-token-stack/raw/master/cycle-toke-stack.zip",
   "readme": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/README.md",
   "changelog": "https://raw.githubusercontent.com/geoidesic/fvtt-cycle-token-stack/master/changelog.md"
 }
